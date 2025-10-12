@@ -117,9 +117,6 @@ def get_markdown_table_to_df(markdown_content: str, section_title: str) -> pd.Da
         # 4.1 処理内容に基づきDataFrameをクリーンアップ
         df.columns = df.columns.str.strip()
         
-        # Unnamed:で始まる空のカラムを削除
-        df = df.loc[:, ~df.columns.str.contains('^Unnamed:')]
-        
         # すべての文字列データをトリム
         for col in df.columns:
             if df[col].dtype == 'object':
@@ -155,7 +152,8 @@ def parse_tables_overview(markdown_path: str, config: Dict[str, Any]) -> pd.Data
         return None
 
     # すべての##セクションを抽出し、Markdownテーブルをパース
-    sections = re.findall(r'(^##\s+.*?)(?=\n##\s+|$)', content, re.MULTILINE | re.DOTALL)
+    sections_raw = content.split('##')[1:]
+    sections = [f"## {s.strip()}" for s in sections_raw if s.strip()]
     all_dfs = []
     
     expected_cols = list(config['validation_rules']['tables_overview_columns'].values())
@@ -221,12 +219,15 @@ def validate_and_parse_table(
     config: Dict[str, Any], 
     all_table_names: List[str],
     all_index_names: set,
-    all_fk_names: set
+    all_fk_names: set,
+    db_docs_dir: str # db-docsディレクトリのパスを受け取る
 ) -> Dict[str, Any] | None:
     """
     個別のテーブル定義ファイルを読み込み、バリデーションと解析を行う。
     """
-    table_file_path = os.path.join('tables', os.path.basename(overview_row['__FILE_PATH'] or f"{table_name_clean}.md"))
+    # tablesディレクトリからの相対パスでファイルパスを構築
+    # overview_row['__FILE_PATH'] は 'users.md' のような値
+    table_file_path = os.path.join(db_docs_dir, 'tables', os.path.basename(overview_row['__FILE_PATH'] or f"{table_name_clean}.md"))
     log_info(f"-> テーブル '{table_name_clean}' ({table_file_path}) の検証を開始します...")
 
     try:
@@ -251,6 +252,7 @@ def validate_and_parse_table(
     try:
         # 1.テーブル概要セクションから情報を抽出
         overview_section_df = parsed_sections['OVERVIEW']
+
         # 概要DFを key-value形式に変換
         overview_map = overview_section_df.set_index(validation_config['table_overview_section_columns']['ITEM']).to_dict()['内容']
         
@@ -281,7 +283,7 @@ def validate_and_parse_table(
         row = match.iloc[0]
         
         # 型チェック (正規表現を使用)
-        type_match = re.match(audit_col['type_regex'], str(row[col_map['TYPE']]).split('(')[0].strip(), re.IGNORECASE)
+        type_match = re.match(audit_col['type_regex'], str(row[col_map['TYPE']]).strip(), re.IGNORECASE)
         if not type_match:
             log_error(f"テーブル '{table_name_clean}': 監査カラム '{col_name}' の型 '{row[col_map['TYPE']]}' が要件と一致しません。")
 
@@ -602,17 +604,23 @@ def main():
     """スクリプトのメイン処理"""
     log_info("--- Prismaスキーマ自動生成スクリプトを開始します ---")
     
-    # 0. パス定義
-    CONFIG_PATH = 'scripts/config.json'
-    TABLES_MD_PATH = 'tables/tables.md'
-    OUTPUT_BASE_DIR = 'sandbox/prisma'
+    # 0. パス定義 (スクリプトの実行場所に関わらず、ファイル位置を正確に特定する)
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(SCRIPT_DIR, 'config.json')
+    
+    DB_DOCS_DIR = os.path.dirname(SCRIPT_DIR)
+    TABLES_MD_PATH = os.path.join(DB_DOCS_DIR, 'tables', 'tables.md')
+    
+    PROJECT_ROOT_DIR = os.path.dirname(DB_DOCS_DIR)
+    OUTPUT_BASE_DIR = os.path.join(PROJECT_ROOT_DIR, 'sandbox', 'prisma')
+
     OUTPUT_MODEL_DIR = os.path.join(OUTPUT_BASE_DIR, 'model')
     
     # 1. 設定ファイルの読み込み
     try:
         config = load_config(CONFIG_PATH)
     except Exception as e:
-        log_error(f"設定ファイルの読み込みまたはパースに失敗しました: {e}", exit_on_error=True)
+        log_error(f"設定ファイルの読み込みまたはパースに失敗しました: {e} (パス: {CONFIG_PATH})", exit_on_error=True)
         return
 
     # 2. テーブル一覧ファイルの解析
@@ -635,13 +643,15 @@ def main():
     for _, row in tqdm(sorted_df.iterrows(), total=len(sorted_df), desc="テーブル検証"):
         table_phys_name = row['__TABLE_PHYSICAL_NAME_CLEAN']
         
+        # db-docsのルートパスを渡す
         parsed_data = validate_and_parse_table(
             table_phys_name, 
             row, 
             config, 
             all_table_names,
             all_index_names,
-            all_fk_names
+            all_fk_names,
+            DB_DOCS_DIR 
         )
         
         if parsed_data:
@@ -682,6 +692,7 @@ def main():
         try:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(schema)
+            # base.prismaからの相対パスとしてimport文を生成
             imported_models.append(f"@import ./model/{model_name}.prisma")
             log_info(f"モデルファイルを出力しました: {file_path}")
         except Exception as e:
@@ -725,10 +736,23 @@ def load_config(path):
         return json.load(f)
 
 if __name__ == "__main__":
+    
+    # スクリプトの実行場所に関わらず、ファイル位置を正確に特定する
+    # SCRIPT_DIR: /path/to/db-docs/scripts
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    # DB_DOCS_DIR: /path/to/db-docs
+    DB_DOCS_DIR = os.path.dirname(SCRIPT_DIR)
+    
+    # 必須入力ファイルのパスを定義
+    CONFIG_PATH_MOCK = os.path.join(SCRIPT_DIR, 'config.json')
+    TABLES_MD_PATH_MOCK = os.path.join(DB_DOCS_DIR, 'tables', 'tables.md')
+    TABLES_DIR_MOCK = os.path.join(DB_DOCS_DIR, 'tables')
+    
     # 実行に必要なモックの入力ファイルが存在しない場合、作成を促す
-    if not os.path.exists('tables/tables.md'):
+    if not os.path.exists(TABLES_MD_PATH_MOCK):
         print("--- ⚠️ 必須入力ファイルのモックを作成します ⚠️ ---")
-        os.makedirs('tables', exist_ok=True)
+        os.makedirs(TABLES_DIR_MOCK, exist_ok=True)
+        
         # tables.md のモック
         mock_tables_md = """
 # テーブル一覧
@@ -743,13 +767,13 @@ if __name__ == "__main__":
 |---|---|---|---|---|
 | 予約情報 | [reservations](./reservations.md) | ユーザーの予約履歴 | 20 | - |
 """
-        with open('tables/tables.md', 'w', encoding='utf-8') as f:
+        with open(TABLES_MD_PATH_MOCK, 'w', encoding='utf-8') as f:
             f.write(mock_tables_md)
-            print("tables/tables.md (モック) を作成しました。")
+            print(f"{TABLES_MD_PATH_MOCK} (モック) を作成しました。")
 
         # users.md のモック (参照元)
         mock_users_md = """
-# ユーザー情報定義書
+# ユーザー情報
 
 ## 1.テーブル概要
 | 項目 | 内容 | 備考 |
@@ -757,7 +781,7 @@ if __name__ == "__main__":
 | テーブル論理名 | ユーザー情報 | - |
 | テーブル物理名 | users | - |
 | テーブル概要 | システムの利用者情報 | - |
-| テーブル系統 | M | - |
+| テーブル系統 | ユーザー管理 | - |
 
 ## 2.カラム定義
 | カラム論理名 | カラム物理名 | 型(桁,精度) | PK | FK | UNIQUE | NOTNULL | DEFAULT | 備考 |
@@ -778,15 +802,14 @@ if __name__ == "__main__":
 ## 4.外部キー定義
 | 外部キー物理名 | 参照元カラム物理名 | 参照先テーブル物理名 | 参照先カラム物理名 | ON DELETE | ON UPDATE | 備考 |
 |---|---|---|---|---|---|---|
-| - | - | - | - | NO ACTION | NO ACTION | 外部キーなし |
 """
-        with open('tables/users.md', 'w', encoding='utf-8') as f:
+        with open(os.path.join(TABLES_DIR_MOCK, 'users.md'), 'w', encoding='utf-8') as f:
             f.write(mock_users_md)
-            print("tables/users.md (モック) を作成しました。")
+            print(f"{os.path.join(TABLES_DIR_MOCK, 'users.md')} (モック) を作成しました。")
             
         # reservations.md のモック (参照先として使用)
         mock_reservations_md = """
-# 予約情報定義書
+# 予約情報
 
 ## 1.テーブル概要
 | 項目 | 内容 | 備考 |
@@ -794,13 +817,13 @@ if __name__ == "__main__":
 | テーブル論理名 | 予約情報 | - |
 | テーブル物理名 | reservations | - |
 | テーブル概要 | ユーザーの予約履歴 | - |
-| テーブル系統 | T | - |
+| テーブル系統 | 予約管理 | - |
 
 ## 2.カラム定義
 | カラム論理名 | カラム物理名 | 型(桁,精度) | PK | FK | UNIQUE | NOTNULL | DEFAULT | 備考 |
 |---|---|---|---|---|---|---|---|---|
 | 予約ID | id | INT | PK | - | - | NN | auto_increment | 主キー |
-| ユーザーID | user_id | INT | - | FK | - | NN | - | users.idへの外部キー |
+| ユーザーID | users_id | INT | - | FK | - | NN | - | users.idへの外部キー |
 | 予約日時 | reservation_date | DATETIME | - | - | - | NN | - | 予約時刻 |
 | 登録日 | registered_at | TIMESTAMP | - | - | - | NN | CURRENT_TIMESTAMP | 登録日時 |
 | 登録者 | registered_by | VARCHAR(255) | - | - | - | NN | - | 登録者ID |
@@ -811,21 +834,21 @@ if __name__ == "__main__":
 ## 3.インデックス定義
 | インデックス物理名 | カラム物理名 | UNIQUE | インデックスタイプ | ソート順 | 備考 |
 |---|---|---|---|---|---|
-| idx_res_user | user_id | - | B-tree | ASC | ユーザー別検索 |
+| idx_res_user | users_id | - | B-tree | ASC | ユーザー別検索 |
 
 ## 4.外部キー定義
 | 外部キー物理名 | 参照元カラム物理名 | 参照先テーブル物理名 | 参照先カラム物理名 | ON DELETE | ON UPDATE | 備考 |
 |---|---|---|---|---|---|---|
-| fk_res_user | user_id | users | id | CASCADE | NO ACTION | ユーザーが削除されたら予約も削除 |
+| fk_res_user | users_id | users | id | CASCADE | NO ACTION | ユーザーが削除されたら予約も削除 |
 """
-        with open('tables/reservations.md', 'w', encoding='utf-8') as f:
+        with open(os.path.join(TABLES_DIR_MOCK, 'reservations.md'), 'w', encoding='utf-8') as f:
             f.write(mock_reservations_md)
-            print("tables/reservations.md (モック) を作成しました。")
+            print(f"{os.path.join(TABLES_DIR_MOCK, 'reservations.md')} (モック) を作成しました。")
         print("--- 続行するために、必要な変更を加えてスクリプトを実行してください ---")
 
 
-    if not os.path.exists(CONFIG_PATH):
-        print(f"致命的エラー: 設定ファイル '{CONFIG_PATH}' が見つかりません。先に config.json を作成してください。")
+    if not os.path.exists(CONFIG_PATH_MOCK):
+        print(f"致命的エラー: 設定ファイル '{CONFIG_PATH_MOCK}' が見つかりません。先に config.json を作成してください。")
         exit(1)
         
     main()
