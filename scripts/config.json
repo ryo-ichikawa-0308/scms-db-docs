@@ -96,14 +96,14 @@
       {
         "name": "updated_at",
         "type_regex": "^(TIMESTAMP)$",
-        "notnull": "NN",
-        "default": "CURRENT_TIMESTAMP"
+        "notnull": "-",
+        "default": "NULL"
       },
       {
         "name": "updated_by",
         "type_regex": "^(VARCHAR\\(36\\))$",
-        "notnull": "NN",
-        "default": "-"
+        "notnull": "-",
+        "default": "NULL"
       },
       {
         "name": "is_deleted",

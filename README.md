@@ -124,7 +124,7 @@ RDBMSはMySQLを前提とします。他のRDBMSを前提とする場合、適�
 | インデックス物理名         | カラム物理名       | UNIQUE | インデックスタイプ | ソート順  | 備考                                                                                             |
 | -------------------------- | ------------------ | ------ | ------------------ | --------- | ------------------------------------------------------------------------------------------------ |
 | idx_users_name             | name               | NO     | B-Tree             | ASC       | ユーザー名検索(一般的な検索)                                                                     |
-| idx_users_available_email  | email, is_deleted  | YES    | B-Tree             | ASC, ASC  | 有効ユーザーのメールアドレス一意性をロジック的に担保するため定義。ログイン時の高速検索にも利用。 |
+| idx_users_available_email  | email, is_deleted  | YES    | B-Tree             | ASC       | 有効ユーザーのメールアドレス一意性をロジック的に担保するため定義。ログイン時の高速検索にも利用。 |
 | idx_orders_status_date     | status, order_date | NO     | B-Tree             | ASC, DESC | 特定ステータス(例: 未発送)の注文を日付降順で一覧表示する検索に利用                               |
 | idx_products_code_hash     | product_code       | YES    | Hash               | -         | 製品コードによる完全一致検索のみに利用                                                           |
 | idx_order_details_order_id | order_id           | NO     | B-Tree             | ASC       | 外部キーによる親テーブルとのJOIN処理効率化(MySQLでは作成不要)                                    |
