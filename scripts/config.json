@@ -70,38 +70,38 @@
     },
     "index_rules": {
       "INDEX_NAME": "^idx_",
-      "UNIQUE": "^(UK|-)$",
+      "UNIQUE": "^(YES|NO)$",
       "TYPE": "^(B-tree|Hash)$",
       "SORT": "^(ASC|DESC|-)$",
       "REMARK": "^(?!-).+$"
     },
     "fk_rules": {
       "FK_NAME": "^fk_",
-      "ON_DELETE": "^(CASCADE|RESTRICT|SET NULL|NO ACTION)$",
-      "ON_UPDATE": "^(CASCADE|RESTRICT|SET NULL|NO ACTION)$"
+      "ON_DELETE": "^(Cascade|Restrict|NoAction|SetNull|SetDefault)$",
+      "ON_UPDATE": "^(Cascade|Restrict|NoAction|SetNull|SetDefault)$"
     },
     "audit_columns": [
       {
         "name": "registered_at",
-        "type_regex": "^(TIMESTAMP|DATETIME)$",
+        "type_regex": "^(TIMESTAMP)$",
         "notnull": "NN",
         "default": "CURRENT_TIMESTAMP"
       },
       {
         "name": "registered_by",
-        "type_regex": "^(VARCHAR\\(255\\)|CHAR\\(36\\))$",
+        "type_regex": "^(VARCHAR\\(36\\))$",
         "notnull": "NN",
         "default": "-"
       },
       {
         "name": "updated_at",
-        "type_regex": "^(TIMESTAMP|DATETIME)$",
+        "type_regex": "^(TIMESTAMP)$",
         "notnull": "NN",
         "default": "CURRENT_TIMESTAMP"
       },
       {
         "name": "updated_by",
-        "type_regex": "^(VARCHAR\\(255\\)|CHAR\\(36\\))$",
+        "type_regex": "^(VARCHAR\\(36\\))$",
         "notnull": "NN",
         "default": "-"
       },
