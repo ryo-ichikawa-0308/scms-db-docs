@@ -12,7 +12,7 @@ RDBMSはMySQLを前提とします。他のRDBMSを前提とする場合、適�
 - **er-diagrams** ER図
 - **scripts** prismaコード作成のためのスクリプト(簡易版)
 
-※本プロジェクトを[simple-contract-management-system](https://github.com/ryo-ichikawa-0308/simple-contract-management-system)のサブモジュールとしてcloneしている場合、Prisma変換スクリプトを実行するpre-pushが自動設定されます。
+※本プロジェクトを[simple-contract-management-system](https://github.com/ryo-ichikawa-0308/simple-contract-management-system)のサブモジュールとしてcloneしている場合、Prisma変換スクリプトを実行するpre-pushが自動設定される想定です。
 
 ## 設計書のファイル構成
 
