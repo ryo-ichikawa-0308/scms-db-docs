@@ -2,7 +2,7 @@
 
 本書は、[simple-contract-management-system](https://github.com/ryo-ichikawa-0308/simple-contract-management-system)のDB定義ルールを記載したものです。
 
-READMEの原則に従って設計したテーブル設計のサンプルと、それをPrismaコードに自動変換するPythonスクリプト(簡易版)を資産に含みます。スクリプトは簡易版のため、基本的な変換のみをサポートします。
+READMEの原則に従って設計したテーブル設計のサンプルと、それをPrismaコードに自動変換するPythonスクリプト(簡易版)を資産に含みます。スクリプトは簡易版のため、最低限の機能(本プロジェクトで公開している資産のPrismaコード変換)のみをサポートします。
 
 RDBMSはMySQLを前提とします。他のRDBMSを前提とする場合、適宜読み替えが必要な場合があります。
 

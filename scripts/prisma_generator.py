@@ -5,28 +5,32 @@ import os
 import io
 import sys
 from typing import Dict, Any, List, Optional
+from pathlib import Path
+import logging
+import stringcase
 
 # --- 定数と設定の動的解決 ---
-# スクリプト自身のディレクトリ（例: /path/to/ProjectRoot/scripts）
-SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+# スクリプト自身のディレクトリ
+SCRIPT_DIR = Path(__file__).resolve().parent
 
-# 親プロジェクトのルートディレクトリ（例: /path/to/ProjectRoot）
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+# プロジェクトのルートディレクトリ /workspace/db-docs
+PROJECT_ROOT = Path(SCRIPT_DIR).parent
 
-# 全てのパスをPROJECT_ROOTまたはSCRIPT_DIRから絶対パスで定義
+# 親プロジェクト(ワークスペース)のルート /workspace
+WORKSPACE_ROOT = PROJECT_ROOT.parent
 
 # 入力ファイル
 CONFIG_PATH = os.path.join(SCRIPT_DIR, 'config.json')  # scripts/config.json
 TABLES_MD_PATH = os.path.join(PROJECT_ROOT, 'tables', 'tables.md') # tables/tables.md
 
 # 出力/ログファイル
-LOG_DIR = os.path.join(PROJECT_ROOT, 'logs')
-OUTPUT_BASE_DIR = os.path.join(PROJECT_ROOT, 'sandbox', 'prisma') # sandbox/prisma
+LOG_DIR = os.path.join(WORKSPACE_ROOT, 'logs/db-docs')
+OUTPUT_BASE_DIR = os.path.join(WORKSPACE_ROOT, 'sandbox', 'prisma') # sandbox/prisma
 OUTPUT_MODEL_DIR = os.path.join(OUTPUT_BASE_DIR, 'model')
 BASE_PRISMA_FILE = os.path.join(OUTPUT_BASE_DIR, 'base.prisma')
 
 
-# --- グローバル変数 (変更なし) ---
+# --- グローバル変数 ---
 config: Dict[str, Any] = {}
 all_tables_fk_data: Dict[str, List[Dict]] = {}
 all_table_names: Dict[str, str] = {} # {物理名: モデル名}
@@ -34,40 +38,51 @@ all_model_names: List[str] = []
 all_fk_names: List[str] = []
 global_error_count = 0
 
+# --- ロギング設定関数 ---
+
+def setup_logging():
+    """
+    loggingモジュールを設定する。
+    """
+    # 既存のロガー設定をクリア (複数回実行された場合のため)
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+        
+    # ロガーの設定
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    logger = logging.getLogger()
+    
+    # 1. コンソールハンドラ (INFO以上)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(console_handler)
+
+    # 2. ファイルハンドラ (INFO以上)
+    info_file_handler = logging.FileHandler(os.path.join(LOG_DIR, 'conversion_info.log'), encoding='utf-8')
+    info_file_handler.setLevel(logging.INFO)
+    info_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(info_file_handler)
+
+    # 3. ファイルハンドラ (WARN以上)
+    error_file_handler = logging.FileHandler(os.path.join(LOG_DIR, 'conversion_warn.log'), encoding='utf-8')
+    error_file_handler.setLevel(logging.WARNING)
+    error_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(error_file_handler)
+    
+    # 4. ファイルハンドラ (ERROR以上)
+    error_file_handler = logging.FileHandler(os.path.join(LOG_DIR, 'conversion_error.log'), encoding='utf-8')
+    error_file_handler.setLevel(logging.ERROR)
+    error_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(error_file_handler)
+
 # --- ユーティリティ関数 ---
 
-def log_error(message: str):
-    """エラーメッセージをコンソールとエラーログファイルに出力 (4.5)"""
+def log_error_and_count(message: str):
+    """エラーメッセージをlog_error_and_countで出力し、グローバルカウンタをインクリメントする"""
     global global_error_count
     global_error_count += 1
-    log_file = os.path.join(LOG_DIR, 'conversion_errors.log')
-        
-    full_message = f"[ERROR] {message}"
-    print(full_message, file=sys.stderr)
-    try:
-        with open(log_file, 'a', encoding='utf-8') as f:
-            f.write(full_message + '\n')
-    except Exception as e:
-        print(f"ログファイル書き込みエラー: {e}", file=sys.stderr)
-
-def log_info(message: str):
-    """処理情報をコンソールと情報ログファイルに出力 (4.5)"""
-    log_file = os.path.join(LOG_DIR, 'conversion_info.log')
-        
-    full_message = f"[INFO] {message}"
-    print(full_message)
-    try:
-        with open(log_file, 'a', encoding='utf-8') as f:
-            f.write(full_message + '\n')
-    except Exception as e:
-        print(f"ログファイル書き込みエラー: {e}", file=sys.stderr)
-
-def to_camel_case(snake_str: str, upper_case_first: bool = False) -> str:
-    """snake_caseをcamelCaseに変換"""
-    components = snake_str.split('_')
-    if upper_case_first:
-        return ''.join(x.title() for x in components)
-    return components[0] + ''.join(x.title() for x in components[1:])
+    logging.error(message)
 
 def parse_type_and_length(type_str: str) -> Dict[str, Any]:
     """型(桁,精度)から型名、桁数、精度を抽出 (4.3)"""
@@ -145,7 +160,7 @@ def find_markdown_sections(content: str) -> List[str]:
     return sections
 
 
-# --- バリデーションと解析関数 (変更なし) ---
+# --- バリデーションと解析関数 ---
 
 def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any]]:
     """個別テーブル定義ファイルを解析しバリデーション (4.3)"""
@@ -153,30 +168,30 @@ def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any
     table_file_path = os.path.join(PROJECT_ROOT, 'tables', f'{table_physical_name}.md')
     
     if not os.path.exists(table_file_path):
-        log_error(f"テーブル定義ファイル '{table_file_path}' が見つかりません。")
+        log_error_and_count(f"テーブル定義ファイル '{table_file_path}' が見つかりません。")
         return None
 
-    log_info(f"テーブル '{table_physical_name}' の解析を開始...")
+    logging.info(f"テーブル '{table_physical_name}' の解析を開始...")
     with open(table_file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    table_data = {'physical_name': table_physical_name, 'model_name': to_camel_case(table_physical_name, True)}
+    table_data = {'physical_name': table_physical_name, 'model_name': stringcase.pascalcase(table_physical_name)}
     
     # 1. テーブル概要のチェック
     sections = config['validation_rules']['table_overview_sections']
     df_overview = get_markdown_table_to_df(content, sections['OVERVIEW'])
     if df_overview.empty:
-        log_error(f"'{table_physical_name}' のセクション '{sections['OVERVIEW']}' が見つからないか、不正です。")
+        log_error_and_count(f"'{table_physical_name}' のセクション '{sections['OVERVIEW']}' が見つからないか、不正です。")
         return None
     
-    log_info("簡易版のため、テーブル概要のチェックは省略し、正しいものとします。")
+    logging.info("簡易版のため、テーブル概要のチェックは省略し、正しいものとします。")
     overview_map = df_overview.set_index(config['validation_rules']['table_overview_section_columns']['ITEM'])['内容'].to_dict()
     table_data['logical_name'] = overview_map.get('テーブル論理名', '')
 
     # 2. カラム定義のチェック
     df_cols = get_markdown_table_to_df(content, sections['COLUMN_DEFINITION'])
     if df_cols.empty:
-        log_error(f"'{table_physical_name}' のセクション '{sections['COLUMN_DEFINITION']}' が見つからないか、不正です。")
+        log_error_and_count(f"'{table_physical_name}' のセクション '{sections['COLUMN_DEFINITION']}' が見つからないか、不正です。")
         return None
 
     parsed_columns = []
@@ -195,7 +210,7 @@ def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any
         
         if base_type == 'DECIMAL' and col_data['precision'] is not None and col_data['length'] is not None:
             if col_data['precision'] > col_data['length']:
-                log_error(f"'{table_physical_name}.{col_phys_name}': DECIMAL型で精度({col_data['precision']})が桁数({col_data['length']})を超えています。")
+                log_error_and_count(f"'{table_physical_name}.{col_phys_name}': DECIMAL型で精度({col_data['precision']})が桁数({col_data['length']})を超えています。")
 
         # FKのリストアップ
         if col_data['FK'] == 'FK':
@@ -203,9 +218,9 @@ def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any
         
         # NOT NULL and DEFAULT NULL チェック
         if col_data['NOTNULL'] == 'NN' and col_data['DEFAULT'].upper() in ['NULL']:
-            log_error(f"'{table_physical_name}.{col_phys_name}': NOT NULL('NN')ですが、DEFAULT値が'NULL'です。")
+            log_error_and_count(f"'{table_physical_name}.{col_phys_name}': NOT NULL('NN')ですが、DEFAULT値が'NULL'です。")
         
-        log_info("簡易版のため、NOT NULL以外のFK項目チェックは省略し、正しいものとします。")
+        logging.info("簡易版のため、NOT NULL以外のFK項目チェックは省略し、正しいものとします。")
 
         parsed_columns.append(col_data)
 
@@ -213,12 +228,12 @@ def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any
 
     # 3. インデックス定義のチェック
     df_idx = get_markdown_table_to_df(content, sections['INDEX_DEFINITION'])
-    # ... (インデックスのバリデーションロジックは省略) ...
+    logging.info("簡易版のため、インデックスのチェックは省略し、正しいものとします。")
     table_data['indexes'] = df_idx.to_dict('records') if not df_idx.empty else []
 
     # 4. 外部キー定義のチェック
     df_fk = get_markdown_table_to_df(content, sections['FK_DEFINITION'])
-    # ... (外部キーのバリデーションロジックは省略) ...
+    logging.info("簡易版のため、外部キーのチェックは省略し、正しいものとします。")
     table_data['foreign_keys'] = df_fk.to_dict('records') if not df_fk.empty else []
         
     # グローバルなFK情報に追加 (逆リレーション生成用)
@@ -226,7 +241,7 @@ def validate_and_parse_table(table_physical_name: str) -> Optional[Dict[str, Any
 
     return table_data
 
-# --- Prisma生成関数 (変更なし) ---
+# --- Prisma生成関数 ---
 
 def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, List[Dict]]) -> str:
     """解析されたデータからPrismaモデル文字列を生成 (4.4)"""
@@ -242,7 +257,7 @@ def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, Lis
     for col in table_data['columns']:
         col_phys_name = col['カラム物理名']
         col_logical_name = col['カラム論理名']
-        field_name = to_camel_case(col_phys_name)
+        field_name = stringcase.camelcase(col_phys_name)
         
         base_type = col['base_type']
         prisma_type = config['type_mappings'].get(base_type, 'String')
@@ -288,9 +303,9 @@ def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, Lis
         source_col_phys = fk['参照元カラム物理名']
         dest_table_phys = fk['参照先テーブル物理名']
         
-        relation_field_name = to_camel_case(fk_name.replace('fk_', ''))
-        dest_model_name = to_camel_case(dest_table_phys, True)
-        fk_field_name = to_camel_case(source_col_phys)
+        relation_field_name = stringcase.camelcase(fk_name.replace('fk_', ''))
+        dest_model_name = stringcase.pascalcase(dest_table_phys)
+        fk_field_name = stringcase.camelcase(source_col_phys)
 
         relation_annotation = (
             f'@relation("{fk_name}", fields: [{fk_field_name}], references: [{fk["参照先カラム物理名"]}], '
@@ -304,12 +319,12 @@ def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, Lis
         if referring_table_phys == table_physical_name:
             continue
         
-        referring_model_name = to_camel_case(referring_table_phys, True)
+        referring_model_name = stringcase.pascalcase(referring_table_phys)
         
         for fk in fks:
             if fk['参照先テーブル物理名'] == table_physical_name:
                 fk_name = fk['外部キー物理名']
-                rev_field_name = 'rev' + to_camel_case(fk_name.replace('fk_', ''), True)
+                rev_field_name = 'rev' + stringcase.pascalcase(fk_name.replace('fk_', ''))
                 
                 prisma_code += f"  {rev_field_name} {referring_model_name}[] @relation(\"{fk_name}\")\n"
 
@@ -325,7 +340,7 @@ def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, Lis
         if uk_mark.startswith('UK'):
             if uk_mark not in uk_groups:
                 uk_groups[uk_mark] = []
-            uk_groups[uk_mark].append(to_camel_case(col['カラム物理名']))
+            uk_groups[uk_mark].append(stringcase.camelcase(col['カラム物理名']))
 
     uk_defined_indexes = []
     
@@ -339,14 +354,14 @@ def generate_prisma_model(table_data: Dict[str, Any], all_fk_data: Dict[str, Lis
             idx_cols = [c.strip() for c in idx['カラム物理名'].split(',')]
             
             if sorted(idx_cols) in uk_defined_indexes:
-                 log_info(f"'{table_physical_name}' のインデックス '{idx['インデックス物理名']}' はUK/@@uniqueと重複するためスキップ。")
+                 logging.warning(f"'{table_physical_name}' のインデックス '{idx['インデックス物理名']}' はUK/@@uniqueと重複するためスキップ。")
                  continue
             
             if idx['UNIQUE'] == 'YES':
-                 log_error(f"'{table_physical_name}' のインデックス '{idx['インデックス物理名']}' はUNIQUEですが、@@uniqueでカバーされていません。手動確認が必要です。")
+                 logging.warning(f"'{table_physical_name}' のインデックス '{idx['インデックス物理名']}' はUNIQUEですが、@@uniqueでカバーされていません。手動確認が必要です。")
                  continue
                  
-            fields_with_sort = ', '.join(f'{to_camel_case(c)}' for c in idx_cols)
+            fields_with_sort = ', '.join(f'{stringcase.camelcase(c)}' for c in idx_cols)
             index_type = ""
             if idx['インデックスタイプ'] == 'Hash':
                  index_type = ", type: Hash"
@@ -379,6 +394,9 @@ def main():
         # 出力ディレクトリの準備
         if not os.path.exists(OUTPUT_MODEL_DIR):
             os.makedirs(OUTPUT_MODEL_DIR)
+        
+        # ロガー初期化
+        setup_logging()
             
     except Exception as e:
         print(f"初期設定ファイルの読み込み/初期化に失敗しました: {e}", file=sys.stderr)
@@ -393,7 +411,7 @@ def main():
         sections_to_parse = find_markdown_sections(tables_md_content)
         
         if not sections_to_parse:
-            log_error(f"テーブル一覧ファイル '{TABLES_MD_PATH}' から有効なテーブル管理セクション ('## ...') が見つかりませんでした。")
+            log_error_and_count(f"テーブル一覧ファイル '{TABLES_MD_PATH}' から有効なテーブル管理セクション ('## ...') が見つかりませんでした。")
             sys.exit(1)
             
         table_overview_dfs = []
@@ -404,7 +422,7 @@ def main():
                 table_overview_dfs.append(df)
         
         if not table_overview_dfs:
-            log_error(f"テーブル一覧ファイル '{TABLES_MD_PATH}' から有効なテーブル情報が抽出できませんでした。")
+            log_error_and_count(f"テーブル一覧ファイル '{TABLES_MD_PATH}' から有効なテーブル情報が抽出できませんでした。")
             sys.exit(1)
             
         df_all_tables = pd.concat(table_overview_dfs, ignore_index=True)
@@ -426,13 +444,13 @@ def main():
             name: name
             for name in unique_phys_names 
         }
-        all_model_names = [to_camel_case(phys_name, True) for phys_name in all_table_names.keys()]
+        all_model_names = [stringcase.pascalcase(phys_name) for phys_name in all_table_names.keys()]
 
         # テーブル作成順序でソート
         sorted_table_names = df_all_tables.sort_values(by='テーブル作成順序')['テーブル物理名_clean'].tolist()
 
     except Exception as e:
-        log_error(f"テーブル一覧ファイルの解析中にエラーが発生しました: {e}")
+        log_error_and_count(f"テーブル一覧ファイルの解析中にエラーが発生しました: {e}")
         sys.exit(1)
 
     # 2. 個別テーブル定義ファイルの解析とバリデーション
@@ -444,13 +462,13 @@ def main():
             parsed_table_data.append(data)
             
     if global_error_count > 0:
-        log_error(f"致命的なエラーが {global_error_count} 件検出されたため、Prismaコード生成を中止します。")
+        log_error_and_count(f"致命的なエラーが {global_error_count} 件検出されたため、Prismaコード生成を中止します。")
         sys.exit(1)
         
-    log_info("--- 全テーブルの解析とバリデーションが完了しました ---")
+    logging.info("--- 全テーブルの解析とバリデーションが完了しました ---")
 
     # 3. Prismaスキーマの生成と出力
-    log_info("Prismaスキーマの生成と出力...")
+    logging.info("Prismaスキーマの生成と出力...")
     model_imports = []
     
     for data in parsed_table_data:
@@ -466,9 +484,9 @@ def main():
         try:
             with open(os.path.join(OUTPUT_MODEL_DIR, model_filename), 'w', encoding='utf-8') as f:
                 f.write(model_code)
-            log_info(f"モデルファイル '{model_filename}' を出力しました。")
+            logging.info(f"モデルファイル '{model_filename}' を出力しました。")
         except Exception as e:
-            log_error(f"モデルファイル '{model_filename}' の出力中にエラーが発生しました: {e}")
+            log_error_and_count(f"モデルファイル '{model_filename}' の出力中にエラーが発生しました: {e}")
 
     # base.prisma ファイルの生成 (絶対パス)
     base_prisma_content = (
@@ -485,11 +503,11 @@ def main():
     try:
         with open(BASE_PRISMA_FILE, 'w', encoding='utf-8') as f:
             f.write(base_prisma_content)
-        log_info(f"メインスキーマファイル '{BASE_PRISMA_FILE}' を出力しました。")
+        logging.info(f"メインスキーマファイル '{BASE_PRISMA_FILE}' を出力しました。")
     except Exception as e:
-        log_error(f"メインスキーマファイル '{BASE_PRISMA_FILE}' の出力中にエラーが発生しました: {e}")
+        log_error_and_count(f"メインスキーマファイル '{BASE_PRISMA_FILE}' の出力中にエラーが発生しました: {e}")
 
-    log_info(f"--- 処理が完了しました。エラー: {global_error_count} 件 ---")
+    logging.info(f"--- 処理が完了しました。エラー: {global_error_count} 件 ---")
 
 if __name__ == '__main__':
     main()
