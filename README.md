@@ -22,3 +22,5 @@ RDBMSはMySQLを前提とします。他のRDBMSを前提とする場合、適�
 - **[services.md](./tables/services.md)** サービステーブルの個別定義書。
 - **[user_services.md](./tables/user_sercvices.md)** ユーザー提供サービステーブルの個別定義書。
 - **[contracts.md](./tables/contracts.md)** 契約テーブルの個別定義書。
+
+(C)2025 Ryo ICHIKAWA
