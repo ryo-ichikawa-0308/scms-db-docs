@@ -29,7 +29,7 @@
 | インデックス物理名        | カラム物理名      | UNIQUE | インデックスタイプ | ソート順 | 備考                                                            |
 | ------------------------- | ----------------- | ------ | ------------------ | -------- | --------------------------------------------------------------- |
 | idx_users_name            | name              | NO     | B-Tree             | ASC      | ユーザー名検索                                                  |
-| idx_users_available_email | email, is_deleted | YES    | B-Tree             | ASC      | 有効ユーザーのメールアドレス一意性をDBレベルで担保（UK1を構成） |
+| idx_users_available_email | email, is_deleted | YES    | B-Tree             | ASC      | 有効ユーザーのメールアドレス一意性をDBレベルで担保(UK1を構成) |
 
 ## 4.外部キー定義
 
