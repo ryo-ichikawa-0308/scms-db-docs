@@ -17,10 +17,10 @@
 | ID           | id            | VARCHAR(36) | PK  | -   | -      | NN      | UUID              | -                              |
 | ユーザーID   | users_id      | VARCHAR(36) | -   | FK  | UK1    | NN      | -                 | 紐づけ先が一意であることを保証 |
 | サービスID   | services_id   | VARCHAR(36) | -   | FK  | UK1    | NN      | -                 | 紐づけ先が一意であることを保証 |
-| 在庫数       | stock         | INT         | -   | -   | -      | NN      | 0                 | 負数は不可(ロジックで担保)     |
-| 登録日時       | registered_at | TIMESTAMP   | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                              |
+| 在庫数       | stock         | INTEGER     | -   | -   | -      | NN      | 0                 | 負数は不可(ロジックで担保)     |
+| 登録日時     | registered_at | TIMESTAMP   | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                              |
 | 登録者       | registered_by | VARCHAR(36) | -   | -   | -      | NN      | -                 | -                              |
-| 更新日時       | updated_at    | TIMESTAMP   | -   | -   | -      | -       | NULL              | -                              |
+| 更新日時     | updated_at    | TIMESTAMP   | -   | -   | -      | -       | NULL              | -                              |
 | 更新者       | updated_by    | VARCHAR(36) | -   | -   | -      | -       | NULL              | -                              |
 | 削除フラグ   | is_deleted    | TINYINT(1)  | -   | -   | -      | NN      | 0                 | -                              |
 
