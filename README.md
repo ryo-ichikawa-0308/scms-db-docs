@@ -1,4 +1,4 @@
-# scms-db-doc(暫定公開番)
+# scms-db-doc(暫定公開版)
 
 本書は、[simple-contract-management-system](https://github.com/ryo-ichikawa-0308/simple-contract-management-system)のDB定義ルールを記載したものです。
 
