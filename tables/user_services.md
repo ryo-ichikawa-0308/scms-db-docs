@@ -22,15 +22,15 @@
 | 登録者       | registered_by | VARCHAR(36) | -   | -   | -      | NN      | -                 | -                              |
 | 更新日       | updated_at    | TIMESTAMP   | -   | -   | -      | -       | NULL              | -                              |
 | 更新者       | updated_by    | VARCHAR(36) | -   | -   | -      | -       | NULL              | -                              |
-| 削除フラグ   | is_deleted    | TINYINT     | -   | -   | -      | NN      | 0                 | -                              |
+| 削除フラグ   | is_deleted    | TINYINT(1)  | -   | -   | -      | NN      | 0                 | -                              |
 
 ## 3.インデックス定義
 
-| インデックス物理名            | カラム物理名          | UNIQUE | インデックスタイプ | ソート順  | 備考                                    |
-| ----------------------------- | --------------------- | ------ | ------------------ | --------- | --------------------------------------- |
-| idx_user_services_users_id    | users_id              | NO     | B-Tree             | ASC       | 外部キー/UK構成要素のためのインデックス |
-| idx_user_services_services_id | services_id           | NO     | B-Tree             | ASC       | 外部キー/UK構成要素のためのインデックス |
-| idx_user_services_unique      | users_id, services_id | YES    | B-Tree             | ASC       | UK1を構成                               |
+| インデックス物理名            | カラム物理名          | UNIQUE | インデックスタイプ | ソート順 | 備考                                    |
+| ----------------------------- | --------------------- | ------ | ------------------ | -------- | --------------------------------------- |
+| idx_user_services_users_id    | users_id              | NO     | B-Tree             | ASC      | 外部キー/UK構成要素のためのインデックス |
+| idx_user_services_services_id | services_id           | NO     | B-Tree             | ASC      | 外部キー/UK構成要素のためのインデックス |
+| idx_user_services_unique      | users_id, services_id | YES    | B-Tree             | ASC, ASC | UK1を構成                               |
 
 ## 4.外部キー定義
 

@@ -22,14 +22,14 @@
 | 登録者                 | registered_by    | VARCHAR(36) | -   | -   | -      | NN      | -                 | -                          |
 | 更新日                 | updated_at       | TIMESTAMP   | -   | -   | -      | -       | NULL              | -                          |
 | 更新者                 | updated_by       | VARCHAR(36) | -   | -   | -      | -       | NULL              | -                          |
-| 削除フラグ             | is_deleted       | TINYINT     | -   | -   | -      | NN      | 0                 | -                          |
+| 削除フラグ             | is_deleted       | TINYINT(1)  | -   | -   | -      | NN      | 0                 | -                          |
 
 ## 3.インデックス定義
 
-| インデックス物理名   | カラム物理名     | UNIQUE | インデックスタイプ | ソート順  | 備考 |
-| -------------------- | ---------------- | ------ | ------------------ | --------- | ---- |
-| idx_users_id         | users_id         | NO     | B-Tree             | ASC, DESC | -    |
-| idx_user_services_id | user_services_id | NO     | B-Tree             | ASC, DESC | -    |
+| インデックス物理名   | カラム物理名     | UNIQUE | インデックスタイプ | ソート順 | 備考 |
+| -------------------- | ---------------- | ------ | ------------------ | -------- | ---- |
+| idx_users_id         | users_id         | NO     | B-Tree             | ASC      | -    |
+| idx_user_services_id | user_services_id | NO     | B-Tree             | ASC      | -    |
 
 ## 4.外部キー定義
 
