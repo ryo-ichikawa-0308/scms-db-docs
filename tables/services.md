@@ -19,9 +19,9 @@
 | 概要         | description   | VARCHAR(255) | -   | -   | -      | NN      | -                 | -                                  |
 | 単価         | price         | INT          | -   | -   | -      | NN      | 0                 | -                                  |
 | 単位         | unit          | VARCHAR(16)  | -   | -   | -      | NN      | -                 | -                                  |
-| 登録日       | registered_at | TIMESTAMP    | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                                  |
+| 登録日時       | registered_at | TIMESTAMP    | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                                  |
 | 登録者       | registered_by | VARCHAR(36)  | -   | -   | -      | NN      | -                 | -                                  |
-| 更新日       | updated_at    | TIMESTAMP    | -   | -   | -      | -       | NULL              | -                                  |
+| 更新日時       | updated_at    | TIMESTAMP    | -   | -   | -      | -       | NULL              | -                                  |
 | 更新者       | updated_by    | VARCHAR(36)  | -   | -   | -      | -       | NULL              | -                                  |
 | 削除フラグ   | is_deleted    | TINYINT(1)   | -   | -   | UK1    | NN      | 0                 | -                                  |
 
