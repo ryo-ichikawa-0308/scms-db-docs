@@ -1,0 +1,659 @@
+{
+    "tableList": {
+        "ユーザー管理": [
+            {
+                "no": "1",
+                "logicalName": "ユーザー",
+                "physicalName": "users",
+                "path": "./users.md",
+                "description": "システム利用者の基本情報",
+                "dependencyLevel": "1",
+                "note": "-"
+            }
+        ],
+        "サービス管理": [
+            {
+                "no": "1",
+                "logicalName": "サービス",
+                "physicalName": "services",
+                "path": "./services.md",
+                "description": "システム内で取り扱っているサービスの情報",
+                "dependencyLevel": "2",
+                "note": ""
+            },
+            {
+                "no": "2",
+                "logicalName": "ユーザー提供サービス",
+                "physicalName": "user_services",
+                "path": "./user_services.md",
+                "description": "どのユーザーがどのサービスを幾つ提供可能かを管理する",
+                "dependencyLevel": "3",
+                "note": ""
+            }
+        ],
+        "契約管理": [
+            {
+                "no": "1",
+                "logicalName": "契約",
+                "physicalName": "contracts",
+                "path": "./contracts.md",
+                "description": "どのユーザーがどのサービスを幾つ契約したかを管理する",
+                "dependencyLevel": "4",
+                "note": "-"
+            }
+        ]
+    },
+    "tables": [
+        {
+            "summary": {
+                "logicalName": "ユーザー",
+                "physicalName": "users",
+                "description": "システム利用者の基本情報",
+                "category": "ユーザー管理"
+            },
+            "columns": [
+                {
+                    "logicalName": "ID",
+                    "physicalName": "id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": true,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "UUID",
+                    "note": ""
+                },
+                {
+                    "logicalName": "ユーザー名",
+                    "physicalName": "name",
+                    "typeAndSize": "VARCHAR(255)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "メールアドレス",
+                    "physicalName": "email",
+                    "typeAndSize": "VARCHAR(255)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": "ログインIDとしても使用"
+                },
+                {
+                    "logicalName": "パスワード",
+                    "physicalName": "password",
+                    "typeAndSize": "VARCHAR(255)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": "ハッシュとして保存"
+                },
+                {
+                    "logicalName": "登録日時",
+                    "physicalName": "registered_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "CURRENT_TIMESTAMP",
+                    "note": ""
+                },
+                {
+                    "logicalName": "登録者",
+                    "physicalName": "registered_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新日時",
+                    "physicalName": "updated_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新者",
+                    "physicalName": "updated_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "削除フラグ",
+                    "physicalName": "is_deleted",
+                    "typeAndSize": "TINYINT(1)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "indexPhysicalName": "idx_users_name",
+                    "columnPhysicalName": [
+                        "name"
+                    ],
+                    "isUnique": false,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC"
+                    ],
+                    "note": "ユーザー名検索"
+                },
+                {
+                    "indexPhysicalName": "idx_users_available_email",
+                    "columnPhysicalName": [
+                        "email",
+                        "is_deleted"
+                    ],
+                    "isUnique": true,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC",
+                        "ASC"
+                    ],
+                    "note": "有効ユーザーのメールアドレス一意性をDBレベルで担保(UK1を構成)"
+                }
+            ],
+            "foreignKeys": []
+        },
+        {
+            "summary": {
+                "logicalName": "サービス",
+                "physicalName": "services",
+                "description": "システム内で取り扱っているサービスの情報",
+                "category": "サービス管理"
+            },
+            "columns": [
+                {
+                    "logicalName": "ID",
+                    "physicalName": "id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": true,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "UUID",
+                    "note": ""
+                },
+                {
+                    "logicalName": "サービス名",
+                    "physicalName": "name",
+                    "typeAndSize": "VARCHAR(255)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": "サービス名はユーザー間で被らせない"
+                },
+                {
+                    "logicalName": "概要",
+                    "physicalName": "description",
+                    "typeAndSize": "VARCHAR(255)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "単価",
+                    "physicalName": "price",
+                    "typeAndSize": "INTEGER",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": ""
+                },
+                {
+                    "logicalName": "単位",
+                    "physicalName": "unit",
+                    "typeAndSize": "VARCHAR(16)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "登録日時",
+                    "physicalName": "registered_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "CURRENT_TIMESTAMP",
+                    "note": ""
+                },
+                {
+                    "logicalName": "登録者",
+                    "physicalName": "registered_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新日時",
+                    "physicalName": "updated_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新者",
+                    "physicalName": "updated_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "削除フラグ",
+                    "physicalName": "is_deleted",
+                    "typeAndSize": "TINYINT(1)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "indexPhysicalName": "idx_services_name_available",
+                    "columnPhysicalName": [
+                        "name",
+                        "is_deleted"
+                    ],
+                    "isUnique": true,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC",
+                        "ASC"
+                    ],
+                    "note": "有効なサービス名の一意性をDBレベルで担保(UK1を構成)"
+                }
+            ],
+            "foreignKeys": []
+        },
+        {
+            "summary": {
+                "logicalName": "ユーザー提供サービス",
+                "physicalName": "user_services",
+                "description": "どのユーザーがどのサービスを幾つ提供可能かを管理する",
+                "category": "サービス管理"
+            },
+            "columns": [
+                {
+                    "logicalName": "ID",
+                    "physicalName": "id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": true,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "UUID",
+                    "note": ""
+                },
+                {
+                    "logicalName": "ユーザーID",
+                    "physicalName": "users_id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": true,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": "紐づけ先が一意であることを保証"
+                },
+                {
+                    "logicalName": "サービスID",
+                    "physicalName": "services_id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": true,
+                    "unique": [
+                        "UK1"
+                    ],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": "紐づけ先が一意であることを保証"
+                },
+                {
+                    "logicalName": "在庫数",
+                    "physicalName": "stock",
+                    "typeAndSize": "INTEGER",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": "負数は不可(ロジックで担保)"
+                },
+                {
+                    "logicalName": "登録日時",
+                    "physicalName": "registered_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "CURRENT_TIMESTAMP",
+                    "note": ""
+                },
+                {
+                    "logicalName": "登録者",
+                    "physicalName": "registered_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新日時",
+                    "physicalName": "updated_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新者",
+                    "physicalName": "updated_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "削除フラグ",
+                    "physicalName": "is_deleted",
+                    "typeAndSize": "TINYINT(1)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "indexPhysicalName": "idx_user_services_users_id",
+                    "columnPhysicalName": [
+                        "users_id"
+                    ],
+                    "isUnique": false,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC"
+                    ],
+                    "note": "外部キー/UK構成要素のためのインデックス"
+                },
+                {
+                    "indexPhysicalName": "idx_user_services_services_id",
+                    "columnPhysicalName": [
+                        "services_id"
+                    ],
+                    "isUnique": false,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC"
+                    ],
+                    "note": "外部キー/UK構成要素のためのインデックス"
+                },
+                {
+                    "indexPhysicalName": "idx_user_services_unique",
+                    "columnPhysicalName": [
+                        "users_id",
+                        "services_id"
+                    ],
+                    "isUnique": true,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC",
+                        "ASC"
+                    ],
+                    "note": "UK1を構成"
+                }
+            ],
+            "foreignKeys": [
+                {
+                    "foreignKeyPhysicalName": "fk_user_services_users",
+                    "sourceColumnPhysicalName": "users_id",
+                    "targetTablePhysicalName": "users",
+                    "targetColumnPhysicalName": "id",
+                    "onDelete": "NoAction",
+                    "onUpdate": "NoAction",
+                    "note": ""
+                },
+                {
+                    "foreignKeyPhysicalName": "fk_user_services_services",
+                    "sourceColumnPhysicalName": "services_id",
+                    "targetTablePhysicalName": "services",
+                    "targetColumnPhysicalName": "id",
+                    "onDelete": "NoAction",
+                    "onUpdate": "NoAction",
+                    "note": ""
+                }
+            ]
+        },
+        {
+            "summary": {
+                "logicalName": "契約",
+                "physicalName": "contracts",
+                "description": "どのユーザーがどのサービスを幾つ契約したかを管理する",
+                "category": "契約管理"
+            },
+            "columns": [
+                {
+                    "logicalName": "ID",
+                    "physicalName": "id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": true,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "UUID",
+                    "note": ""
+                },
+                {
+                    "logicalName": "ユーザーID",
+                    "physicalName": "users_id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": true,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "ユーザー提供サービスID",
+                    "physicalName": "user_services_id",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": true,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "契約数",
+                    "physicalName": "quantity",
+                    "typeAndSize": "INTEGER",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": "負数は不可(ロジックで担保)"
+                },
+                {
+                    "logicalName": "登録日時",
+                    "physicalName": "registered_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "CURRENT_TIMESTAMP",
+                    "note": ""
+                },
+                {
+                    "logicalName": "登録者",
+                    "physicalName": "registered_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": "",
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新日時",
+                    "physicalName": "updated_at",
+                    "typeAndSize": "TIMESTAMP",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "更新者",
+                    "physicalName": "updated_by",
+                    "typeAndSize": "VARCHAR(36)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": ""
+                },
+                {
+                    "logicalName": "削除フラグ",
+                    "physicalName": "is_deleted",
+                    "typeAndSize": "TINYINT(1)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": true,
+                    "defaultValue": 0,
+                    "note": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "indexPhysicalName": "idx_users_id",
+                    "columnPhysicalName": [
+                        "users_id"
+                    ],
+                    "isUnique": false,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC"
+                    ],
+                    "note": ""
+                },
+                {
+                    "indexPhysicalName": "idx_user_services_id",
+                    "columnPhysicalName": [
+                        "user_services_id"
+                    ],
+                    "isUnique": false,
+                    "indexType": "B-Tree",
+                    "sortOrder": [
+                        "ASC"
+                    ],
+                    "note": ""
+                }
+            ],
+            "foreignKeys": [
+                {
+                    "foreignKeyPhysicalName": "fk_contracts_users",
+                    "sourceColumnPhysicalName": "users_id",
+                    "targetTablePhysicalName": "users",
+                    "targetColumnPhysicalName": "id",
+                    "onDelete": "NoAction",
+                    "onUpdate": "NoAction",
+                    "note": ""
+                },
+                {
+                    "foreignKeyPhysicalName": "fk_contracts_user_services",
+                    "sourceColumnPhysicalName": "user_services_id",
+                    "targetTablePhysicalName": "user_services",
+                    "targetColumnPhysicalName": "id",
+                    "onDelete": "NoAction",
+                    "onUpdate": "NoAction",
+                    "note": ""
+                }
+            ]
+        }
+    ]
+}

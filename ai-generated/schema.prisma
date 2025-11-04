@@ -1,0 +1,130 @@
+// Prisma code of simple-contract-management-system
+// !!! DO NOT EDIT MANUALLY !!!
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// ユーザー
+model Users {
+  /// ID
+  id String @id @default(uuid()) @db.VarChar(36)
+  /// ユーザー名
+  name String @db.VarChar(255)
+  /// メールアドレス
+  email String @db.VarChar(255)
+  /// パスワード
+  password String @db.VarChar(255)
+  /// 登録日時
+  registeredAt DateTime @default(now()) @db.DateTime(3)
+  /// 登録者
+  registeredBy String @db.VarChar(36)
+  /// 更新日時
+  updatedAt DateTime? @updatedAt @db.DateTime(3)
+  /// 更新者
+  updatedBy String? @db.VarChar(36)
+  /// 削除フラグ
+  isDeleted Int @default(0) @db.TinyInt
+  
+  userServices UserServices[] @relation("fk_user_services_users")
+  contracts Contracts[] @relation("fk_contracts_users")
+
+  @@unique([email, isDeleted], map: "UK1")
+  @@index([name], map: "idx_users_name")
+  @@map("users")
+}
+
+/// サービス
+model Services {
+  /// ID
+  id String @id @default(uuid()) @db.VarChar(36)
+  /// サービス名
+  name String @db.VarChar(255)
+  /// 概要
+  description String @db.VarChar(255)
+  /// 単価
+  price Int @default(0) @db.Int
+  /// 単位
+  unit String @db.VarChar(16)
+  /// 登録日時
+  registeredAt DateTime @default(now()) @db.DateTime(3)
+  /// 登録者
+  registeredBy String @db.VarChar(36)
+  /// 更新日時
+  updatedAt DateTime? @updatedAt @db.DateTime(3)
+  /// 更新者
+  updatedBy String? @db.VarChar(36)
+  /// 削除フラグ
+  isDeleted Int @default(0) @db.TinyInt
+  
+  userServices UserServices[] @relation("fk_user_services_services")
+
+  @@unique([name, isDeleted], map: "UK1")
+  @@index([name, isDeleted], map: "idx_services_name_available")
+  @@map("services")
+}
+
+/// ユーザー提供サービス
+model UserServices {
+  /// ID
+  id String @id @default(uuid()) @db.VarChar(36)
+  /// ユーザーID
+  usersId String @map("users_id") @db.VarChar(36)
+  /// サービスID
+  servicesId String @map("services_id") @db.VarChar(36)
+  /// 在庫数
+  stock Int @default(0) @db.Int
+  /// 登録日時
+  registeredAt DateTime @default(now()) @db.DateTime(3)
+  /// 登録者
+  registeredBy String @db.VarChar(36)
+  /// 更新日時
+  updatedAt DateTime? @updatedAt @db.DateTime(3)
+  /// 更新者
+  updatedBy String? @db.VarChar(36)
+  /// 削除フラグ
+  isDeleted Int @default(0) @db.TinyInt
+  
+  users Users @relation("fk_user_services_users", fields: [usersId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services Services @relation("fk_user_services_services", fields: [servicesId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contracts Contracts[] @relation("fk_contracts_user_services")
+
+  @@unique([usersId, servicesId], map: "UK1")
+  @@index([usersId], map: "idx_user_services_users_id")
+  @@index([servicesId], map: "idx_user_services_services_id")
+  @@index([usersId, servicesId], map: "idx_user_services_unique")
+  @@map("user_services")
+}
+
+/// 契約
+model Contracts {
+  /// ID
+  id String @id @default(uuid()) @db.VarChar(36)
+  /// ユーザーID
+  usersId String @map("users_id") @db.VarChar(36)
+  /// ユーザー提供サービスID
+  userServicesId String @map("user_services_id") @db.VarChar(36)
+  /// 契約数
+  quantity Int @default(0) @db.Int
+  /// 登録日時
+  registeredAt DateTime @default(now()) @db.DateTime(3)
+  /// 登録者
+  registeredBy String @db.VarChar(36)
+  /// 更新日時
+  updatedAt DateTime? @updatedAt @db.DateTime(3)
+  /// 更新者
+  updatedBy String? @db.VarChar(36)
+  /// 削除フラグ
+  isDeleted Int @default(0) @db.TinyInt
+  
+  users Users @relation("fk_contracts_users", fields: [usersId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userServices UserServices @relation("fk_contracts_user_services", fields: [userServicesId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([usersId], map: "idx_users_id")
+  @@index([userServicesId], map: "idx_user_services_id")
+  @@map("contracts")
+}
