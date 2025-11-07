@@ -12,17 +12,18 @@
 
 ## 2.カラム定義
 
-| カラム論理名   | カラム物理名  | 型(桁,精度)  | PK  | FK  | UNIQUE | NOTNULL | DEFAULT           | 備考                   |
-| -------------- | ------------- | ------------ | --- | --- | ------ | ------- | ----------------- | ---------------------- |
-| ID             | id            | VARCHAR(36)  | PK  | -   | -      | NN      | UUID              | -                      |
-| ユーザー名     | name          | VARCHAR(255) | -   | -   | -      | NN      | -                 | -                      |
-| メールアドレス | email         | VARCHAR(255) | -   | UK1 | -      | NN      | -                 | ログインIDとしても使用 |
-| パスワード     | password      | VARCHAR(255) | -   | -   | -      | NN      | -                 | ハッシュとして保存     |
-| 登録日時         | registered_at | TIMESTAMP    | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                      |
-| 登録者         | registered_by | VARCHAR(36)  | -   | -   | -      | NN      | -                 | -                      |
-| 更新日時         | updated_at    | TIMESTAMP    | -   | -   | -      | -       | NULL              | -                      |
-| 更新者         | updated_by    | VARCHAR(36)  | -   | -   | -      | -       | NULL              | -                      |
-| 削除フラグ     | is_deleted    | TINYINT(1)   | -   | UK1 | -      | NN      | 0                 | -                      |
+| カラム論理名   | カラム物理名  | 型(桁,精度)   | PK  | FK  | UNIQUE | NOTNULL | DEFAULT           | 備考                                    |
+| -------------- | ------------- | ------------- | --- | --- | ------ | ------- | ----------------- | --------------------------------------- |
+| ID             | id            | CHAR(36)      | PK  | -   | -      | NN      | UUID              | -                                       |
+| ユーザー名     | name          | VARCHAR(256)  | -   | -   | -      | NN      | -                 | -                                       |
+| メールアドレス | email         | VARCHAR(256)  | -   | UK1 | -      | NN      | -                 | ログインIDとしても使用                  |
+| パスワード     | password      | VARCHAR(256)  | -   | -   | -      | NN      | -                 | ハッシュとして保存                      |
+| 認証トークン   | token         | VARCHAR(2048) | -   | -   | -      | -       | -                 | ログイン時に付与されるJWTの認証トークン |
+| 登録日時       | registered_at | TIMESTAMP(3)  | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                                       |
+| 登録者         | registered_by | CHAR(36)      | -   | -   | -      | NN      | -                 | -                                       |
+| 更新日時       | updated_at    | TIMESTAMP(3)  | -   | -   | -      | -       | NULL              | -                                       |
+| 更新者         | updated_by    | CHAR(36)      | -   | -   | -      | -       | NULL              | -                                       |
+| 削除フラグ     | is_deleted    | TINYINT(1)    | -   | UK1 | -      | NN      | 0                 | -                                       |
 
 ## 3.インデックス定義
 
