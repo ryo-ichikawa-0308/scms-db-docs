@@ -18,7 +18,7 @@
 | ユーザー名     | name          | VARCHAR(256)  | -   | -   | -      | NN      | -                 | -                                       |
 | メールアドレス | email         | VARCHAR(256)  | -   | UK1 | -      | NN      | -                 | ログインIDとしても使用                  |
 | パスワード     | password      | VARCHAR(256)  | -   | -   | -      | NN      | -                 | ハッシュとして保存                      |
-| 認証トークン   | token         | VARCHAR(2048) | -   | -   | -      | -       | -                 | ログイン時に付与されるJWTの認証トークン |
+| 認証トークン   | token         | VARCHAR(2048) | -   | -   | -      | -       | NULL              | ログイン時に付与されるJWTの認証トークン |
 | 登録日時       | registered_at | TIMESTAMP(3)  | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                                       |
 | 登録者         | registered_by | CHAR(36)      | -   | -   | -      | NN      | -                 | -                                       |
 | 更新日時       | updated_at    | TIMESTAMP(3)  | -   | -   | -      | -       | NULL              | -                                       |

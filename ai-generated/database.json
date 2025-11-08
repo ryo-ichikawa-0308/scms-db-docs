@@ -55,7 +55,7 @@
                 {
                     "logicalName": "ID",
                     "physicalName": "id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": true,
                     "isForeignKey": false,
                     "unique": [],
@@ -66,7 +66,7 @@
                 {
                     "logicalName": "ユーザー名",
                     "physicalName": "name",
-                    "typeAndSize": "VARCHAR(255)",
+                    "typeAndSize": "VARCHAR(256)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -77,7 +77,7 @@
                 {
                     "logicalName": "メールアドレス",
                     "physicalName": "email",
-                    "typeAndSize": "VARCHAR(255)",
+                    "typeAndSize": "VARCHAR(256)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [
@@ -90,7 +90,7 @@
                 {
                     "logicalName": "パスワード",
                     "physicalName": "password",
-                    "typeAndSize": "VARCHAR(255)",
+                    "typeAndSize": "VARCHAR(256)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -99,9 +99,20 @@
                     "note": "ハッシュとして保存"
                 },
                 {
+                    "logicalName": "認証トークン",
+                    "physicalName": "token",
+                    "typeAndSize": "VARCHAR(2048)",
+                    "isPrimaryKey": false,
+                    "isForeignKey": false,
+                    "unique": [],
+                    "isNotNull": false,
+                    "defaultValue": null,
+                    "note": "ログイン時に付与されるJWTの認証トークン"
+                },
+                {
                     "logicalName": "登録日時",
                     "physicalName": "registered_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -112,7 +123,7 @@
                 {
                     "logicalName": "登録者",
                     "physicalName": "registered_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -123,7 +134,7 @@
                 {
                     "logicalName": "更新日時",
                     "physicalName": "updated_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -134,7 +145,7 @@
                 {
                     "logicalName": "更新者",
                     "physicalName": "updated_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -197,7 +208,7 @@
                 {
                     "logicalName": "ID",
                     "physicalName": "id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": true,
                     "isForeignKey": false,
                     "unique": [],
@@ -208,7 +219,7 @@
                 {
                     "logicalName": "サービス名",
                     "physicalName": "name",
-                    "typeAndSize": "VARCHAR(255)",
+                    "typeAndSize": "VARCHAR(256)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [
@@ -221,7 +232,7 @@
                 {
                     "logicalName": "概要",
                     "physicalName": "description",
-                    "typeAndSize": "VARCHAR(255)",
+                    "typeAndSize": "VARCHAR(256)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -254,7 +265,7 @@
                 {
                     "logicalName": "登録日時",
                     "physicalName": "registered_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -265,7 +276,7 @@
                 {
                     "logicalName": "登録者",
                     "physicalName": "registered_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -276,7 +287,7 @@
                 {
                     "logicalName": "更新日時",
                     "physicalName": "updated_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -287,7 +298,7 @@
                 {
                     "logicalName": "更新者",
                     "physicalName": "updated_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -338,7 +349,7 @@
                 {
                     "logicalName": "ID",
                     "physicalName": "id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": true,
                     "isForeignKey": false,
                     "unique": [],
@@ -349,7 +360,7 @@
                 {
                     "logicalName": "ユーザーID",
                     "physicalName": "users_id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": true,
                     "unique": [
@@ -362,7 +373,7 @@
                 {
                     "logicalName": "サービスID",
                     "physicalName": "services_id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": true,
                     "unique": [
@@ -386,7 +397,7 @@
                 {
                     "logicalName": "登録日時",
                     "physicalName": "registered_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -397,7 +408,7 @@
                 {
                     "logicalName": "登録者",
                     "physicalName": "registered_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -408,7 +419,7 @@
                 {
                     "logicalName": "更新日時",
                     "physicalName": "updated_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -419,7 +430,7 @@
                 {
                     "logicalName": "更新者",
                     "physicalName": "updated_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -511,7 +522,7 @@
                 {
                     "logicalName": "ID",
                     "physicalName": "id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": true,
                     "isForeignKey": false,
                     "unique": [],
@@ -522,7 +533,7 @@
                 {
                     "logicalName": "ユーザーID",
                     "physicalName": "users_id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": true,
                     "unique": [],
@@ -533,7 +544,7 @@
                 {
                     "logicalName": "ユーザー提供サービスID",
                     "physicalName": "user_services_id",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": true,
                     "unique": [],
@@ -555,7 +566,7 @@
                 {
                     "logicalName": "登録日時",
                     "physicalName": "registered_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -566,7 +577,7 @@
                 {
                     "logicalName": "登録者",
                     "physicalName": "registered_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -577,7 +588,7 @@
                 {
                     "logicalName": "更新日時",
                     "physicalName": "updated_at",
-                    "typeAndSize": "TIMESTAMP",
+                    "typeAndSize": "TIMESTAMP(3)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
@@ -588,7 +599,7 @@
                 {
                     "logicalName": "更新者",
                     "physicalName": "updated_by",
-                    "typeAndSize": "VARCHAR(36)",
+                    "typeAndSize": "CHAR(36)",
                     "isPrimaryKey": false,
                     "isForeignKey": false,
                     "unique": [],
