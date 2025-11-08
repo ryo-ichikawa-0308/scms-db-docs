@@ -12,17 +12,17 @@
 
 ## 2.カラム定義
 
-| カラム論理名           | カラム物理名     | 型(桁,精度) | PK  | FK  | UNIQUE | NOTNULL | DEFAULT           | 備考                       |
-| ---------------------- | ---------------- | ----------- | --- | --- | ------ | ------- | ----------------- | -------------------------- |
-| ID                     | id               | VARCHAR(36) | PK  | -   | -      | NN      | UUID              | -                          |
-| ユーザーID             | users_id         | VARCHAR(36) | -   | FK  | -      | NN      | -                 | -                          |
-| ユーザー提供サービスID | user_services_id | VARCHAR(36) | -   | FK  | -      | NN      | -                 | -                          |
-| 契約数                 | quantity         | INTEGER     | -   | -   | -      | NN      | 0                 | 負数は不可(ロジックで担保) |
-| 登録日時               | registered_at    | TIMESTAMP   | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                          |
-| 登録者                 | registered_by    | VARCHAR(36) | -   | -   | -      | NN      | -                 | -                          |
-| 更新日時               | updated_at       | TIMESTAMP   | -   | -   | -      | -       | NULL              | -                          |
-| 更新者                 | updated_by       | VARCHAR(36) | -   | -   | -      | -       | NULL              | -                          |
-| 削除フラグ             | is_deleted       | TINYINT(1)  | -   | -   | -      | NN      | 0                 | -                          |
+| カラム論理名           | カラム物理名     | 型(桁,精度)  | PK  | FK  | UNIQUE | NOTNULL | DEFAULT           | 備考                       |
+| ---------------------- | ---------------- | ------------ | --- | --- | ------ | ------- | ----------------- | -------------------------- |
+| ID                     | id               | CHAR(36)     | PK  | -   | -      | NN      | UUID              | -                          |
+| ユーザーID             | users_id         | CHAR(36)     | -   | FK  | -      | NN      | -                 | -                          |
+| ユーザー提供サービスID | user_services_id | CHAR(36)     | -   | FK  | -      | NN      | -                 | -                          |
+| 契約数                 | quantity         | INTEGER      | -   | -   | -      | NN      | 0                 | 負数は不可(ロジックで担保) |
+| 登録日時               | registered_at    | TIMESTAMP(3) | -   | -   | -      | NN      | CURRENT_TIMESTAMP | -                          |
+| 登録者                 | registered_by    | CHAR(36)     | -   | -   | -      | NN      | -                 | -                          |
+| 更新日時               | updated_at       | TIMESTAMP(3) | -   | -   | -      | -       | NULL              | -                          |
+| 更新者                 | updated_by       | CHAR(36)     | -   | -   | -      | -       | NULL              | -                          |
+| 削除フラグ             | is_deleted       | TINYINT(1)   | -   | -   | -      | NN      | 0                 | -                          |
 
 ## 3.インデックス定義
 
